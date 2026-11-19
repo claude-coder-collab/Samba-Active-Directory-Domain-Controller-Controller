@@ -45,7 +45,9 @@ async function main(): Promise<void> {
   await page.locator('#main-view').waitFor({ timeout: 10000 });
   await page.locator('#users-table tbody tr').first().waitFor();
   await idle();
-  assert((await page.locator('#users-table tbody tr').count()) === 5, '5 users');
+  assert((await page.locator('#users-table tbody tr').count()) === 7, '7 users');
+  assert((await page.textContent('#users-table tr[data-username=jsmith] td.expiry'))!.trim() === '31 days', 'jsmith expiry');
+  assert((await page.textContent('#users-table tr[data-username=rnew] td.expiry'))!.trim() === 'Must change', 'rnew must change');
   assert((await page.textContent('#domain-title')) === 'samdom.example.com', 'domain title');
   assert((await page.locator('#groups-tree li.group').count()) === 3, '3 non-built-in groups');
   await step('03-main');

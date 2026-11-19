@@ -7,6 +7,8 @@ interface FakeUser {
   surname: string;
   password: string;
   uac: number;
+  /** Unix ms of the last password set, or 0 when the user must change it at next login. */
+  pwdLastSet: number;
 }
 
 /** An in-memory emulation of the samba-tool commands used by the app. */
@@ -29,20 +31,33 @@ export class FakeSambaTool {
 
   constructor() {
     for (const g of ['Domain Users', 'Domain Admins', 'Administrators', 'Schema Admins', 'Enterprise Admins', 'Domain Guests']) this.groups.set(g, new Set());
-    this.addUser('Administrator', '', '', 'Passw0rd!', 0x10200);
-    this.addUser('krbtgt', '', '', 'x', 0x202);
-    this.addUser('Guest', '', '', '', 0x10222);
-    this.addUser('jsmith', 'John', 'Smith', 'Passw0rd!', 0x200);
-    this.addUser('mjones', 'Mary', 'Jones', 'Passw0rd!', 0x202);
-    this.addUser('agarcía', 'Ana', 'García', 'Passw0rd!', 0x10200);
+    const daysAgo = (d: number): number => Date.now() - d * 86400000;
+    this.addUser('Administrator', '', '', 'Passw0rd!', 0x10200, daysAgo(400));
+    this.addUser('krbtgt', '', '', 'x', 0x202, daysAgo(400));
+    this.addUser('Guest', '', '', '', 0x10222, 0);
+    this.addUser('jsmith', 'John', 'Smith', 'Passw0rd!', 0x200, daysAgo(10));
+    this.addUser('mjones', 'Mary', 'Jones', 'Passw0rd!', 0x202, daysAgo(35));
+    this.addUser('agarcía', 'Ana', 'García', 'Passw0rd!', 0x10200, daysAgo(90));
+    this.addUser('pchen', 'Pat', 'Chen', 'Passw0rd!', 0x200, daysAgo(50));
+    this.addUser('rnew', 'Robin', 'New', 'Passw0rd!', 0x200, 0);
     this.groups.set('Staff', new Set(['jsmith', 'mjones']));
     this.groups.set('Sales Team', new Set(['agarcía']));
     this.groups.set('Empty Group', new Set());
     this.groups.get('Domain Admins')!.add('Administrator');
   }
 
-  private addUser(username: string, givenName: string, surname: string, password: string, uac: number): void {
-    this.users.set(username.toLowerCase(), { username, givenName, surname, password, uac });
+  private addUser(username: string, givenName: string, surname: string, password: string, uac: number, pwdLastSet: number): void {
+    this.users.set(username.toLowerCase(), { username, givenName, surname, password, uac, pwdLastSet });
+  }
+
+  /** Mirrors Samba's msDS-UserPasswordExpiryTimeComputed using the domain policy's maximum age. */
+  expiryTimeComputed(u: FakeUser): string {
+    const never = '9223372036854775807';
+    if (u.uac & 0x10000) return never;
+    if (u.pwdLastSet === 0) return '0';
+    const maxDays = Number(this.policy[5]![2]);
+    if (!(maxDays > 0)) return never;
+    return String((BigInt(u.pwdLastSet + maxDays * 86400000) + 11644473600000n) * 10000n);
   }
 
   private option(args: string[], name: string): string | undefined {
@@ -118,13 +133,15 @@ export class FakeSambaTool {
           `userAccountControl: ${String(u.uac)}`,
           `sAMAccountName: ${u.username}`,
           `distinguishedName: ${dn}`,
+          ...(this.option(args, 'attributes')?.split(',').includes('msDS-UserPasswordExpiryTimeComputed') ? [`msDS-UserPasswordExpiryTimeComputed: ${this.expiryTimeComputed(u)}`] : []),
           '',
         ].join('\n');
       }
       case 'user create': {
         if (this.users.has(c!.toLowerCase())) throw new Error(`ERROR(ldb): Failed to add user "${c!}": - LDAP error 68 LDAP_ENTRY_ALREADY_EXISTS`);
         this.checkPassword(d!);
-        this.addUser(c!, this.option(args, 'given-name') ?? '', this.option(args, 'surname') ?? '', d!, args.includes('--must-change-at-next-login') ? 0x800200 : 0x200);
+        const mustChange = args.includes('--must-change-at-next-login');
+        this.addUser(c!, this.option(args, 'given-name') ?? '', this.option(args, 'surname') ?? '', d!, 0x200, mustChange ? 0 : Date.now());
         this.groups.get('Domain Users')!.add(c!);
         return `User '${c!}' added successfully\n`;
       }
@@ -145,6 +162,7 @@ export class FakeSambaTool {
         const pw = this.option(args, 'newpassword') ?? '';
         this.checkPassword(pw);
         u.password = pw;
+        u.pwdLastSet = args.includes('--must-change-at-next-login') ? 0 : Date.now();
         return `Changed password OK\n`;
       }
       case 'group list':

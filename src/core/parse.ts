@@ -1,3 +1,4 @@
+import { parsePasswordExpiry } from './expiry.js';
 import { parseAccountFlags } from './flags.js';
 import type { DomainUser, PolicyEntry } from './types.js';
 
@@ -57,6 +58,9 @@ function first(attrs: Record<string, string[]>, ...keys: string[]): string | und
   return undefined;
 }
 
+/** Constructed attribute holding the effective password expiry time; only returned when requested. */
+export const passwordExpiryAttribute = 'msDS-UserPasswordExpiryTimeComputed';
+
 /** Builds a DomainUser from parsed `user show` attributes. */
 export function userFromLdif(attrs: Record<string, string[]>): DomainUser {
   const uac = first(attrs, 'userAccountControl');
@@ -68,6 +72,7 @@ export function userFromLdif(attrs: Record<string, string[]>): DomainUser {
     flags,
     disabled: flags.includes('ACCOUNTDISABLE'),
     distinguishedName: first(attrs, 'distinguishedName', 'dn') ?? '',
+    passwordExpiry: parsePasswordExpiry(first(attrs, passwordExpiryAttribute)),
   };
 }
 

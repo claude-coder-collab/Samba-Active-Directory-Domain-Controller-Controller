@@ -1,4 +1,5 @@
 import type { Result, SdccApi, Snapshot } from '../core/api.js';
+import { describeExpiry } from '../core/expiry.js';
 import { emptyUserRow, policyChanges, rowsToUsers, type UserRow } from '../core/forms.js';
 import type { DomainUser, GroupMap, PolicyEntry } from '../core/types.js';
 
@@ -97,8 +98,12 @@ function renderUsers(): void {
   for (const u of state.selectedUsers) if (!known.has(u)) state.selectedUsers.delete(u);
   const visible = state.users.filter((u) => filter === '' || [u.username, u.givenName, u.surname].some((s) => s.toLowerCase().includes(filter)));
   $('user-count').textContent = `(${String(state.users.length)})`;
+  const now = Date.now();
   $('users-table').querySelector('tbody')!.replaceChildren(
     ...visible.map((u) => {
+      const expiry = describeExpiry(u.passwordExpiry, now);
+      const expiryCell = h('td', { className: `expiry ${expiry.level}`, textContent: expiry.text });
+      if (u.passwordExpiry.kind === 'at') expiryCell.title = new Date(u.passwordExpiry.unixMs).toLocaleString();
       const tr = h(
         'tr',
         { className: [state.selectedUsers.has(u.username) ? 'selected' : '', u.disabled ? 'disabled-user' : ''].join(' ').trim() },
@@ -106,7 +111,8 @@ function renderUsers(): void {
         h('td', { textContent: u.givenName }),
         h('td', { textContent: u.surname }),
         h('td', { textContent: u.disabled ? 'Disabled' : 'Enabled' }),
-        h('td', { className: 'flags', textContent: u.flags.filter((f) => f !== 'NORMAL_ACCOUNT' && f !== 'ACCOUNTDISABLE').join(', ') }),
+        expiryCell,
+        h('td', { className: 'flags', textContent: u.flags.filter((f) => f !== 'NORMAL_ACCOUNT' && f !== 'ACCOUNTDISABLE' && f !== 'DONT_EXPIRE_PASSWORD' && f !== 'PASSWORD_EXPIRED').join(', ') }),
       );
       tr.dataset['username'] = u.username;
       return tr;

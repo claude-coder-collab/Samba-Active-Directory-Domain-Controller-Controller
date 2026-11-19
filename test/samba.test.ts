@@ -18,7 +18,7 @@ const fakeDc = (): FakeExecutor =>
     if (cmd === 'samba-tool domain info 10.0.0.1') return { stdout: domainInfo };
     if (cmd === 'samba-tool user list') return { stdout: 'Administrator\nkrbtgt\nzoe\nadam\n' };
     if (cmd.startsWith('samba-tool user show ')) {
-      const name = cmd.split(' ').at(-1)!;
+      const name = cmd.split(' ')[3]!;
       return { stdout: userShow(name[0]!.toUpperCase() + name.slice(1)) };
     }
     if (cmd === 'samba-tool group list') return { stdout: 'Domain Users\nStaff\nDomain Admins\nAlpha\n' };
@@ -33,6 +33,12 @@ describe('SambaTool', () => {
     const s = new SambaTool(fakeDc());
     expect((await s.getDomainInfo('10.0.0.1'))['Netbios domain']).toBe('SAMDOM');
     expect(await s.getDomainDn('10.0.0.1')).toBe('DC=samdom,DC=example,DC=com');
+  });
+
+  it('requests the computed password expiry attribute', async () => {
+    const ex = fakeDc();
+    await new SambaTool(ex).getUser('zoe');
+    expect(ex.commands).toEqual(["samba-tool user show zoe '--attributes=*,msDS-UserPasswordExpiryTimeComputed'"]);
   });
 
   it('lists non-built-in users sorted', async () => {

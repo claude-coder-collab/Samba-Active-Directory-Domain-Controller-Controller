@@ -1,3 +1,4 @@
+import type { PasswordExpiry } from './expiry.js';
 import type { AccountFlag } from './flags.js';
 
 export interface DomainUser {
@@ -7,6 +8,7 @@ export interface DomainUser {
   flags: AccountFlag[];
   disabled: boolean;
   distinguishedName: string;
+  passwordExpiry: PasswordExpiry;
 }
 
 export interface NewUser {

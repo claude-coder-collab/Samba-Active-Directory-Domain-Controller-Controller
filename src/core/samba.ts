@@ -1,5 +1,5 @@
 import { builtInGroups, builtInUsers } from './builtins.js';
-import { domainToDn, lines, parseKeyValueLines, parseLdif, parsePasswordPolicy, policyOptions, summariseSambaError, userFromLdif } from './parse.js';
+import { domainToDn, lines, passwordExpiryAttribute, parseKeyValueLines, parseLdif, parsePasswordPolicy, policyOptions, summariseSambaError, userFromLdif } from './parse.js';
 import { shellJoin } from './shell.js';
 import type { DomainUser, Executor, GroupMap, NewUser, PolicyEntry } from './types.js';
 import { ValidationError, validateAccountName, validatePassword, validatePersonName } from './validate.js';
@@ -66,7 +66,7 @@ export class SambaTool {
   }
 
   async getUser(username: string): Promise<DomainUser> {
-    return userFromLdif(parseLdif(await this.run('user', 'show', username)));
+    return userFromLdif(parseLdif(await this.run('user', 'show', username, `--attributes=*,${passwordExpiryAttribute}`)));
   }
 
   async getUsers(): Promise<DomainUser[]> {

@@ -16,3 +16,8 @@
 ## 2026-11-19 — Trimmed scope
 - **Removed CSV import** at the user's request (the original only had a stub button).
 - **Removed SSH key and agent authentication**; login is password-only. Auto-connect depended on passwordless login, so it was removed too, along with its menu item and preference.
+
+## 2026-11-19 — Password expiry column
+- **Use Samba's constructed `msDS-UserPasswordExpiryTimeComputed`** rather than computing `pwdLastSet` + the domain "Maximum password age": Samba's value also accounts for fine-grained password policies (PSOs), never-expire flags and must-change-at-next-login. It is requested in the existing `user show` call, so no extra round trips. Requires Samba ≥ 4.9; older DCs show "—".
+- **Days are rounded down** (whole days remaining); under 24 h shows "Today". Computed with the client's clock.
+- **Warning threshold 14 days**, fixed.
