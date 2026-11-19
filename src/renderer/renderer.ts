@@ -1,5 +1,5 @@
 import type { Result, SdccApi, Snapshot } from '../core/api.js';
-import { csvToUserRows, emptyUserRow, policyChanges, rowsToUsers, type UserRow } from '../core/forms.js';
+import { emptyUserRow, policyChanges, rowsToUsers, type UserRow } from '../core/forms.js';
 import type { DomainUser, GroupMap, PolicyEntry } from '../core/types.js';
 
 declare global {
@@ -177,7 +177,6 @@ async function initConnectForm(): Promise<void> {
   if (prefs !== undefined) {
     $<HTMLInputElement>('conn-host').value = prefs.host;
     $<HTMLInputElement>('conn-user').value = prefs.username;
-    $<HTMLInputElement>('conn-auto').checked = prefs.autoConnect;
   }
   showView('connect');
   (prefs?.host ? $('conn-pass') : $('conn-host')).focus();
@@ -188,7 +187,7 @@ $('connect-form').addEventListener('submit', (e) => {
   void (async () => {
     const pass = $<HTMLInputElement>('conn-pass');
     const ok = await call(() =>
-      api.connect({ host: $<HTMLInputElement>('conn-host').value, username: $<HTMLInputElement>('conn-user').value, password: pass.value, autoConnect: $<HTMLInputElement>('conn-auto').checked }),
+      api.connect({ host: $<HTMLInputElement>('conn-host').value, username: $<HTMLInputElement>('conn-user').value, password: pass.value }),
     );
     if (ok === undefined) return;
     pass.value = '';
@@ -209,11 +208,6 @@ $('btn-disconnect').addEventListener('click', () => void disconnect());
 api.onMenu((action) => {
   if (action === 'refresh' && !$('main-view').hidden) void refreshAll();
   if (action === 'disconnect') void disconnect();
-  if (action === 'disable-auto-connect') {
-    void call(() => api.setAutoConnect(false)).then((r) => {
-      if (r !== undefined) void showMessage('Auto-connect', 'Automatic connection has been turned off.');
-    });
-  }
 });
 
 $('policy-form').addEventListener('submit', (e) => {
@@ -433,18 +427,6 @@ $('btn-user-add').addEventListener('click', () => {
   openAddUsers();
 });
 $('btn-add-row').addEventListener('click', () => $('add-users-rows').append(userRowElement(emptyUserRow())));
-$('btn-import-csv').addEventListener('click', () => $('csv-file').click());
-$<HTMLInputElement>('csv-file').addEventListener('change', (e) => {
-  const input = e.target as HTMLInputElement;
-  const file = input.files?.[0];
-  input.value = '';
-  if (file === undefined) return;
-  void file.text().then((text) => {
-    const imported = csvToUserRows(text);
-    const existing = readUserRows().filter((r) => [r.username, r.givenName, r.surname, r.password].some((s) => s.trim() !== ''));
-    openAddUsers([...existing, ...imported]);
-  });
-});
 
 $<HTMLDialogElement>('dlg-add-users').addEventListener('close', () => {
   const dlg = $<HTMLDialogElement>('dlg-add-users');
@@ -462,12 +444,4 @@ $<HTMLDialogElement>('dlg-add-users').addEventListener('close', () => {
   })();
 });
 
-void (async () => {
-  const auto = await api.autoConnect();
-  if (auto.ok && auto.value) {
-    await onConnected();
-    return;
-  }
-  await initConnectForm();
-  if (!auto.ok) await showMessage('Automatic connection failed', auto.error);
-})();
+void initConnectForm();

@@ -6,7 +6,7 @@ TypeScript/Electron port of [AdamVenn/Samba-Active-Directory-Domain-Controller-C
 
 ### What it does
 - View and edit the domain password policy
-- View, add (one by one or from CSV), delete, enable and disable users
+- View, add, delete, enable and disable users
 - Reset user passwords (optionally forcing a change at next login)
 - View, add and remove non-built-in groups
 - Add users to and remove users from groups
@@ -20,11 +20,7 @@ TypeScript/Electron port of [AdamVenn/Samba-Active-Directory-Domain-Controller-C
 npm ci
 npm start
 ```
-Enter the DC's address (append `:port` for non-standard SSH ports), user and password. Leave the password blank to authenticate with your SSH agent or an unencrypted key in `~/.ssh`. On first connection you are asked to confirm the server's host key fingerprint; it is then remembered and a changed key is refused.
-
-Tick **Connect automatically** to skip the connection screen next time (key/agent authentication only). Turn it off under **Connection → Don't Connect Automatically**.
-
-**CSV import** (Add users → Import CSV…): either a header row with columns such as `username, given name, surname, password, must change`, or no header with columns in that order. `must change` accepts yes/no/true/false/1/0 and defaults to yes.
+Enter the DC's address (append `:port` for non-standard SSH ports), user and password. On first connection you are asked to confirm the server's host key fingerprint; it is then remembered and a changed key is refused.
 
 Multi-select users and group members with Ctrl/⌘-click (Shift-click for a range of users). Double-click a group to collapse it.
 

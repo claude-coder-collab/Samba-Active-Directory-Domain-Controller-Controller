@@ -44,8 +44,8 @@ describe('Session', () => {
   it('connects, remembers the host key and preferences, and snapshots', async () => {
     const d = deps();
     const s = new Session(d);
-    await s.connect({ host: ' 10.0.0.1 ', username: 'admin', password: 'x', autoConnect: true });
-    expect(d.saved.at(-1)).toEqual({ host: '10.0.0.1', username: 'admin', autoConnect: true, knownHosts: { '10.0.0.1': 'SHA256:abc' } });
+    await s.connect({ host: ' 10.0.0.1 ', username: 'admin', password: 'x' });
+    expect(d.saved.at(-1)).toEqual({ host: '10.0.0.1', username: 'admin', knownHosts: { '10.0.0.1': 'SHA256:abc' } });
     const snap = await s.snapshot();
     expect(snap.domainDn).toBe('DC=samdom,DC=example,DC=com');
     expect(snap.policy).toHaveLength(9);
@@ -54,32 +54,21 @@ describe('Session', () => {
 
   it('refuses a changed host key', async () => {
     const d = deps();
-    await new Session(d).connect({ host: '10.0.0.1', username: 'root', password: '', autoConnect: false });
+    await new Session(d).connect({ host: '10.0.0.1', username: 'root', password: '' });
     const d2 = deps({ hostKey: 'SHA256:evil', loadPreferences: () => d.loadPreferences(), savePreferences: (p) => d.savePreferences(p) });
-    await expect(new Session(d2).connect({ host: '10.0.0.1', username: 'root', password: '', autoConnect: false })).rejects.toThrow('Host key was rejected.');
+    await expect(new Session(d2).connect({ host: '10.0.0.1', username: 'root', password: '' })).rejects.toThrow('Host key was rejected.');
   });
 
   it('does not save when the user declines a new host key', async () => {
     const d = deps({ accept: false });
-    await expect(new Session(d).connect({ host: 'dc1', username: 'root', password: '', autoConnect: false })).rejects.toThrow();
+    await expect(new Session(d).connect({ host: 'dc1', username: 'root', password: '' })).rejects.toThrow();
     expect(d.saved).toEqual([]);
   });
 
   it('keys known hosts by host and non-default port', async () => {
     const d = deps();
-    await new Session(d).connect({ host: '127.0.0.1:2222', username: 'root', password: '', autoConnect: false });
+    await new Session(d).connect({ host: '127.0.0.1:2222', username: 'root', password: '' });
     expect(d.saved.at(-1)?.knownHosts).toEqual({ '127.0.0.1:2222': 'SHA256:abc' });
     expect(d.saved.at(-1)?.host).toBe('127.0.0.1:2222');
-  });
-
-  it('auto-connects only when enabled', async () => {
-    const d = deps();
-    const s = new Session(d);
-    expect(await s.autoConnect()).toBe(false);
-    await s.connect({ host: 'dc1', username: 'root', password: '', autoConnect: true });
-    expect(await s.autoConnect()).toBe(true);
-    expect(d.closed).toBe(1);
-    await s.setAutoConnect(false);
-    expect(await s.autoConnect()).toBe(false);
   });
 });

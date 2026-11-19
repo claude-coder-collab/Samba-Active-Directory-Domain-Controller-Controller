@@ -12,9 +12,7 @@
         <h1>Connect to Domain Controller</h1>
         <label>IP address or hostname <small>(optionally :port)</small><input id="conn-host" required autocomplete="off" spellcheck="false" /></label>
         <label>User<input id="conn-user" required autocomplete="username" spellcheck="false" /></label>
-        <label>Password<input id="conn-pass" type="password" autocomplete="current-password" />
-          <small>Leave blank to use your SSH agent or keys in ~/.ssh</small></label>
-        <label class="check"><input id="conn-auto" type="checkbox" /> Connect automatically <small>(with SSH keys/agent)</small></label>
+        <label>Password<input id="conn-pass" type="password" required autocomplete="current-password" /></label>
         <button type="submit" class="primary">Connect</button>
       </form>
     </section>
@@ -82,8 +80,6 @@
         </div>
         <div class="buttons inline">
           <button type="button" id="btn-add-row">Add row</button>
-          <button type="button" id="btn-import-csv">Import CSV…</button>
-          <input type="file" id="csv-file" accept=".csv,text/csv" hidden />
           <span class="spacer"></span>
           <button value="cancel" formnovalidate>Cancel</button>
           <button value="ok" class="primary">Add users</button>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { normalisePreferences } from '../src/core/api.js';
 import { parseAccountFlags } from '../src/core/flags.js';
-import { csvToUserRows, emptyUserRow, parseCsv, policyChanges, rowsToUsers } from '../src/core/forms.js';
+import { emptyUserRow, policyChanges, rowsToUsers } from '../src/core/forms.js';
 import { domainToDn, parseDn, parseKeyValueLines, parseLdif, parsePasswordPolicy, summariseSambaError, userFromLdif } from '../src/core/parse.js';
 import { shellJoin, shellQuote } from '../src/core/shell.js';
 import { formatHostPort, parseHostPort, ValidationError, validateAccountName, validateHost, validatePassword, validatePersonName } from '../src/core/validate.js';
@@ -147,26 +147,13 @@ describe('forms', () => {
     const policy = parsePasswordPolicy(passwordPolicy + 'Readonly thing: 1\n');
     expect(policyChanges(policy, { 'Password complexity': 'on', 'Minimum password length': ' 10 ', 'Readonly thing': '2' })).toEqual({ 'Minimum password length': '10' });
   });
-  it('parses CSV with quotes', () => {
-    expect(parseCsv('a,"b,c","d ""e"""\r\n\n1,2,3')).toEqual([
-      ['a', 'b,c', 'd "e"'],
-      ['1', '2', '3'],
-    ]);
-  });
-  it('maps CSV with and without headers', () => {
-    expect(csvToUserRows('Surname,Username,Password,Must change\nSmith,js,pw,no\n')).toEqual([
-      { username: 'js', givenName: '', surname: 'Smith', password: 'pw', mustChangeAtNextLogin: false },
-    ]);
-    expect(csvToUserRows('js,John,Smith, pw \n')).toEqual([{ username: 'js', givenName: 'John', surname: 'Smith', password: ' pw ', mustChangeAtNextLogin: true }]);
-  });
 });
 
 describe('preferences', () => {
   it('normalises bad input', () => {
-    expect(normalisePreferences({ host: 5, username: '', autoConnect: 'yes', knownHosts: { a: 'x', b: 2 } })).toEqual({
+    expect(normalisePreferences({ host: 5, username: '', knownHosts: { a: 'x', b: 2 } })).toEqual({
       host: '',
       username: 'root',
-      autoConnect: false,
       knownHosts: { a: 'x' },
     });
   });

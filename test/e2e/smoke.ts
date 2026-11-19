@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   const fp = `SHA256:${createHash('sha256').update(Buffer.from(dc.hostKeyFingerprint, 'base64')).digest('base64').replace(/=+$/, '')}`;
   const userData = await mkdtemp(join(tmpdir(), 'sdcc-e2e-'));
   const host = `127.0.0.1:${String(dc.port)}`;
-  await writeFile(join(userData, 'prefs.json'), JSON.stringify({ host, username: 'root', autoConnect: false, knownHosts: { [host]: fp } }));
+  await writeFile(join(userData, 'prefs.json'), JSON.stringify({ host, username: 'root', knownHosts: { [host]: fp } }));
 
   const app = await electron.launch({ args: ['.'], env: { ...process.env, SDCC_USER_DATA: userData } });
   const page = await app.firstWindow();

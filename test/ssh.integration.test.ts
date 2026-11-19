@@ -47,14 +47,17 @@ describe('SshExecutor against the fake DC', () => {
     await expect(SshExecutor.connect({ host: '127.0.0.1', port: dc.port, username: 'root', password: 'secret', verifyHostKey: () => Promise.resolve(false) })).rejects.toThrow();
   });
 
+  it('requires a password', async () => {
+    await expect(SshExecutor.connect({ host: '127.0.0.1', port: dc.port, username: 'root', password: '', verifyHostKey: () => Promise.resolve(true) })).rejects.toThrow('Please enter a password.');
+  });
+
   it('reports bad credentials', async () => {
     await expect(SshExecutor.connect({ host: '127.0.0.1', port: dc.port, username: 'root', password: 'wrong', verifyHostKey: () => Promise.resolve(true) })).rejects.toThrow(/Authentication failed/);
   });
 });
 
 describe('authMethods', () => {
-  it('orders password, keyboard-interactive, agent, then keys', () => {
-    expect(authMethods('u', 'pw', '/tmp/agent', [Buffer.from('k')]).map((m) => m.type)).toEqual(['password', 'keyboard-interactive', 'agent', 'publickey']);
-    expect(authMethods('u', '', undefined, [])).toEqual([]);
+  it('uses password then keyboard-interactive only', () => {
+    expect(authMethods('u', 'pw').map((m) => m.type)).toEqual(['password', 'keyboard-interactive']);
   });
 });

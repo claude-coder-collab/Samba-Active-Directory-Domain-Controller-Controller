@@ -54,26 +54,13 @@ export class Session {
     this.executor = executor;
     this.tool = new SambaTool(executor);
     this.host = target.host;
-    await this.deps.savePreferences({ ...prefs, host, username, autoConnect: req.autoConnect });
-  }
-
-  /** Connects using saved preferences when auto-connect is enabled. Returns false when not attempted. */
-  async autoConnect(): Promise<boolean> {
-    const prefs = await this.deps.loadPreferences();
-    if (!prefs.autoConnect || prefs.host === '') return false;
-    await this.connect({ host: prefs.host, username: prefs.username, password: '', autoConnect: true });
-    return true;
+    await this.deps.savePreferences({ ...prefs, host, username });
   }
 
   disconnect(): void {
     this.executor?.close();
     this.executor = undefined;
     this.tool = undefined;
-  }
-
-  async setAutoConnect(enabled: boolean): Promise<void> {
-    const prefs = await this.deps.loadPreferences();
-    await this.deps.savePreferences({ ...prefs, autoConnect: enabled });
   }
 
   async snapshot(): Promise<Snapshot> {

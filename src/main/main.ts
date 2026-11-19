@@ -49,14 +49,9 @@ const handlers: Handlers = {
     await session.connect(req);
     return null;
   }),
-  autoConnect: () => wrap(() => session.autoConnect()),
   disconnect: () => wrap(async () => {
     session.disconnect();
     return Promise.resolve(null);
-  }),
-  setAutoConnect: (enabled) => wrap(async () => {
-    await session.setAutoConnect(enabled);
-    return null;
   }),
   snapshot: () => wrap(() => session.snapshot()),
   getUsers: () => wrap(() => session.tools.getUsers()),
@@ -104,7 +99,7 @@ const handlers: Handlers = {
   }),
 };
 
-function sendMenu(action: 'disable-auto-connect' | 'disconnect' | 'refresh'): void {
+function sendMenu(action: 'disconnect' | 'refresh'): void {
   mainWindow?.webContents.send('menu', action);
 }
 
@@ -117,7 +112,6 @@ function buildMenu(): void {
       submenu: [
         { label: 'Refresh', accelerator: 'CmdOrCtrl+R', click: () => sendMenu('refresh') },
         { label: 'Disconnect', click: () => sendMenu('disconnect') },
-        { label: "Don't Connect Automatically", click: () => sendMenu('disable-auto-connect') },
         ...(isMac ? [] : [{ type: 'separator' as const }, { role: 'quit' as const }]),
       ],
     },
