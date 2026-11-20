@@ -22,7 +22,8 @@
     "productName": "Samba Domain Controller Controller",
     "files": [
       "dist/**",
-      "package.json"
+      "package.json",
+      "!node_modules/ssh2/lib/protocol/crypto/build/**"
     ],
     "directories": {
       "buildResources": "build",
