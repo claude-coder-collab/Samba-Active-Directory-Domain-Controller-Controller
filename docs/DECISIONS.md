@@ -22,3 +22,4 @@
 - **Days are rounded down** (whole days remaining); under 24 h shows "Today". Computed with the client's clock.
 - **Warning threshold 14 days**, fixed.
 - **minimatch override** (2026-11-20): `npm audit` flags minimatch 9/10 (GHSA-g3hv-75wg-m249) inside electron-builder, with no fixed stable release; `npm audit fix --force` downgrades electron-builder to a worse version. `overrides` lifts only minimatch `>=7 <11.0.1` to `^11.0.1` (v3/v5 copies use a different API and are untouched). Build-time only. Remove once electron-builder updates.
+- **Release workflow** (2026-11-20): macOS builds are universal (Intel + Apple Silicon; cpu-features is rebuilt per arch and merged). Each OS builds with `--publish never` and uploads its installer as an artifact; one final job creates a single draft release with `gh`. electron-builder's own publishing creates duplicate drafts when uploads run in parallel. Auto-update files are not published (no auto-updater).
