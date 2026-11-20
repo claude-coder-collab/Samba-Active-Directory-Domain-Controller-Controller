@@ -48,6 +48,10 @@ table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 4px 8px; white-space: nowrap; }
 thead th { position: sticky; top: 0; background: var(--card); border-bottom: 1px solid var(--border); font-weight: 600; }
 #users-table tbody tr { cursor: default; user-select: none; }
+#users-table th[data-column] { cursor: pointer; user-select: none; white-space: nowrap; }
+#users-table th[data-column]:hover { color: var(--accent); }
+#users-table th[aria-sort=ascending]::after { content: ' ▲'; font-size: 9px; }
+#users-table th[aria-sort=descending]::after { content: ' ▼'; font-size: 9px; }
 #users-table tbody tr.selected, .tree .selected > .label { background: var(--select); }
 #users-table td.flags { color: var(--muted); font-size: 11px; white-space: normal; }
 .expiry.warn { color: #b45309; font-weight: 600; }
