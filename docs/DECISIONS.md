@@ -21,3 +21,4 @@
 - **Use Samba's constructed `msDS-UserPasswordExpiryTimeComputed`** rather than computing `pwdLastSet` + the domain "Maximum password age": Samba's value also accounts for fine-grained password policies (PSOs), never-expire flags and must-change-at-next-login. It is requested in the existing `user show` call, so no extra round trips. Requires Samba ≥ 4.9; older DCs show "—".
 - **Days are rounded down** (whole days remaining); under 24 h shows "Today". Computed with the client's clock.
 - **Warning threshold 14 days**, fixed.
+- **minimatch override** (2026-11-20): `npm audit` flags minimatch 9/10 (GHSA-g3hv-75wg-m249) inside electron-builder, with no fixed stable release; `npm audit fix --force` downgrades electron-builder to a worse version. `overrides` lifts only minimatch `>=7 <11.0.1` to `^11.0.1` (v3/v5 copies use a different API and are untouched). Build-time only. Remove once electron-builder updates.

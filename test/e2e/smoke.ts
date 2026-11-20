@@ -52,6 +52,18 @@ async function main(): Promise<void> {
   assert((await page.locator('#groups-tree li.group').count()) === 3, '3 non-built-in groups');
   await step('03-main');
 
+  const userOrder = async (): Promise<string[]> => page.locator('#users-table tbody tr').evaluateAll((trs) => trs.map((tr) => (tr as HTMLElement).dataset['username']!));
+  assert((await userOrder())[0] === 'Administrator', 'default sort by login name');
+  await page.click('#users-table th[data-column=surname]');
+  assert((await userOrder()).join() === 'pchen,agarcía,mjones,rnew,jsmith,Administrator,Guest', `surname ascending: ${(await userOrder()).join()}`);
+  await page.click('#users-table th[data-column=surname]');
+  assert((await userOrder()).slice(0, 2).join() === 'jsmith,rnew', 'surname descending');
+  assert((await page.getAttribute('#users-table th[data-column=surname]', 'aria-sort')) === 'descending', 'sort indicator');
+  await page.click('#users-table th[data-column=expiry]');
+  assert((await userOrder())[0] === 'rnew', 'must change sorts first');
+  await step('03b-sorted');
+  await page.click('#users-table th[data-column=username]');
+
   await page.click('#btn-user-add');
   const rows = page.locator('#add-users-rows tr');
   await rows.nth(0).locator('[data-field=username]').fill('newbie');

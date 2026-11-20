@@ -2,6 +2,7 @@ import type { Result, SdccApi, Snapshot } from '../core/api.js';
 import { describeExpiry } from '../core/expiry.js';
 import { emptyUserRow, policyChanges, rowsToUsers, type UserRow } from '../core/forms.js';
 import type { DomainUser, GroupMap, PolicyEntry } from '../core/types.js';
+import { defaultUserSort, displayFlags, sortUsers, toggleUserSort, userColumns, type UserColumn } from '../core/user-sort.js';
 
 declare global {
   interface Window {
@@ -28,6 +29,7 @@ const state = {
   users: [] as DomainUser[],
   groups: {} as GroupMap,
   policy: [] as PolicyEntry[],
+  userSort: defaultUserSort,
   selectedUsers: new Set<string>(),
   lastUserClick: undefined as string | undefined,
   selectedTree: new Set<string>(),
@@ -96,8 +98,12 @@ function renderUsers(): void {
   const filter = $<HTMLInputElement>('user-filter').value.trim().toLowerCase();
   const known = new Set(state.users.map((u) => u.username));
   for (const u of state.selectedUsers) if (!known.has(u)) state.selectedUsers.delete(u);
-  const visible = state.users.filter((u) => filter === '' || [u.username, u.givenName, u.surname].some((s) => s.toLowerCase().includes(filter)));
+  const visible = sortUsers(state.users, state.userSort).filter((u) => filter === '' || [u.username, u.givenName, u.surname].some((s) => s.toLowerCase().includes(filter)));
   $('user-count').textContent = `(${String(state.users.length)})`;
+  for (const th of $('users-table').querySelectorAll<HTMLTableCellElement>('thead th[data-column]')) {
+    const sorted = th.dataset['column'] === state.userSort.column;
+    th.ariaSort = sorted ? (state.userSort.descending ? 'descending' : 'ascending') : 'none';
+  }
   const now = Date.now();
   $('users-table').querySelector('tbody')!.replaceChildren(
     ...visible.map((u) => {
@@ -112,7 +118,7 @@ function renderUsers(): void {
         h('td', { textContent: u.surname }),
         h('td', { textContent: u.disabled ? 'Disabled' : 'Enabled' }),
         expiryCell,
-        h('td', { className: 'flags', textContent: u.flags.filter((f) => f !== 'NORMAL_ACCOUNT' && f !== 'ACCOUNTDISABLE' && f !== 'DONT_EXPIRE_PASSWORD' && f !== 'PASSWORD_EXPIRED').join(', ') }),
+        h('td', { className: 'flags', textContent: displayFlags(u) }),
       );
       tr.dataset['username'] = u.username;
       return tr;
@@ -238,6 +244,12 @@ $('policy-form').addEventListener('submit', (e) => {
 $('user-filter').addEventListener('input', renderUsers);
 
 $('users-table').addEventListener('click', (e) => {
+  const column = (e.target as HTMLElement).closest<HTMLElement>('th[data-column]')?.dataset['column'];
+  if (column !== undefined && (userColumns as readonly string[]).includes(column)) {
+    state.userSort = toggleUserSort(state.userSort, column as UserColumn);
+    renderUsers();
+    return;
+  }
   const tr = (e.target as HTMLElement).closest('tr');
   const name = tr?.dataset['username'];
   if (name === undefined) return;
