@@ -67,3 +67,7 @@ docs/_build/
 
 # PyBuilder
 target/
+# Node / Electron
+node_modules/
+dist/
+release/

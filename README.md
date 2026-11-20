@@ -1,52 +1,41 @@
-# Samba-Active-Directory-Domain-Controller-Controller
-A simple graphical interface for using samba-tool to manage your Samba Active Directory domain controller on a remote server over SSH
+# Samba Active Directory Domain Controller Controller
 
-### What does it do?
- - View/edit domain password policy
- - View non built-in users
- - View non-built-in groups
- - Add/remove users
- - Add/remove groups
- - Add/remove users to/from non-built-in groups
- - Reset user passwords
- - Enable/disable users
+A simple desktop app for managing a Samba 4 Active Directory domain controller over SSH, using the official [`samba-tool`](https://wiki.samba.org/index.php/User_and_Group_management). Nothing needs to be installed on the server.
 
-### Why would you use this?
-You made a Linux-based Active Directory domain controller using Samba 4, and need a simple GUI to manage users, groups and the password policy. If you followed the tutorial [here](https://wiki.samba.org/index.php/Setting_up_Samba_as_an_Active_Directory_Domain_Controller), you may well want this program!
+TypeScript/Electron port of [AdamVenn/Samba-Active-Directory-Domain-Controller-Controller](https://github.com/AdamVenn/Samba-Active-Directory-Domain-Controller-Controller).
 
-### How is this different from the other options?
-It:
- - is dead simple
- - requires no extra set up or install on the server side
- - is aimed specifically at Samba 4 Active Directory domain controllers
- - is a cross-platform desktop application
- - works with SSH
- - uses the official [samba-tool](https://wiki.samba.org/index.php/User_and_Group_management)
- - doesn't require updating
- - relies on SSH for security
+### What it does
+- View and edit the domain password policy
+- View, add, delete, enable and disable users, with days left until each password expires
+- Reset user passwords (optionally forcing a change at next login)
+- View, add and remove non-built-in groups
+- Add users to and remove users from groups
 
-### What do I need to build/run it?
- - Python
- - wxPython for the GUI
- - Paramiko for the SSH
- - PyYAML for the preferences file
+### Requirements
+- A Samba AD DC reachable over SSH, with a login that can run `samba-tool` (normally `root`)
+- To build from source: Node.js 22+
 
-### How can I use it?
+### Usage
+```sh
+npm ci
+npm start
+```
+Enter the DC's address (append `:port` for non-standard SSH ports), user and password. On first connection you are asked to confirm the server's host key fingerprint; it is then remembered and a changed key is refused.
 
- - download/clone the repo:
-    - `git clone "https://github.com/AdamVenn/Samba-Active-Directory-Domain-Controller-Controller.git"`
- - set up your virtual environment:
-    - `python -m venv venv`
-    - `source venv/bin/activate` (macOS/Linux) or `.\venv\Scripts\activate` (Windows)
- - install the dependencies:
-    - `pip install -r requirements.txt`
- - run it:
-    - `python samba_gui.py`
- - enter the DC IP address, username and password to connect
- - optionally, build it on Mac:
-    - `pip install py2app`
-    - `python setup.py`
+Multi-select users and group members with Ctrl/⌘-click (Shift-click for a range of users). Double-click a group to collapse it.
 
-### Contributing
+### Building packages
+```sh
+npm run dist        # dmg / nsis installer / AppImage for the current OS, in release/
+```
+Pushing a `v*` tag builds all three on GitHub Actions and attaches them to a draft release.
 
-Contributions/advice/bug reports welcome!
+### Development
+```sh
+npm run check       # typecheck, lint, unit + SSH integration tests
+npm run fake-dc     # local fake DC on 127.0.0.1:2222 (root / secret) to try the app against
+npm run e2e         # drives the real app against the fake DC with Playwright
+```
+
+### License
+GPL-3.0, as the original.

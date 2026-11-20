@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:" />
+    <title>Samba Domain Controller Controller</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section id="connect-view" class="view" hidden>
+      <form id="connect-form" class="card connect-card">
+        <h1>Connect to Domain Controller</h1>
+        <label>IP address or hostname <small>(optionally :port)</small><input id="conn-host" required autocomplete="off" spellcheck="false" /></label>
+        <label>User<input id="conn-user" required autocomplete="username" spellcheck="false" /></label>
+        <label>Password<input id="conn-pass" type="password" required autocomplete="current-password" /></label>
+        <button type="submit" class="primary">Connect</button>
+      </form>
+    </section>
+
+    <section id="main-view" class="view" hidden>
+      <header>
+        <h1 id="domain-title">Domain</h1>
+        <span id="domain-dn" class="muted"></span>
+        <span class="spacer"></span>
+        <button id="btn-refresh" title="Refresh (Ctrl/⌘+R)">Refresh</button>
+        <button id="btn-disconnect">Disconnect</button>
+      </header>
+      <div class="columns">
+        <div class="column narrow">
+          <section class="card">
+            <h2>Your Domain</h2>
+            <dl id="domain-info"></dl>
+          </section>
+          <section class="card">
+            <h2>Password Policy</h2>
+            <form id="policy-form">
+              <div id="policy-fields" class="policy"></div>
+              <button type="submit" class="primary">Update password policy</button>
+            </form>
+          </section>
+        </div>
+        <section class="card column">
+          <h2>Users <span id="user-count" class="muted"></span></h2>
+          <input id="user-filter" type="search" placeholder="Filter users" />
+          <div class="scroll">
+            <table id="users-table">
+              <thead><tr><th>Login name</th><th>Given name</th><th>Surname</th><th>Status</th><th>Password expires</th><th>Flags</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="buttons">
+            <button id="btn-user-add">Add users</button>
+            <button id="btn-user-enable">Enable users</button>
+            <button id="btn-user-delete" class="danger">Delete users</button>
+            <button id="btn-user-disable">Disable users</button>
+            <button id="btn-user-password">Change password</button>
+          </div>
+        </section>
+        <section class="card column">
+          <h2>Groups</h2>
+          <div class="scroll"><ul id="groups-tree" class="tree" role="tree" aria-multiselectable="true"></ul></div>
+          <div class="buttons">
+            <button id="btn-group-add">Add group</button>
+            <button id="btn-group-remove" class="danger">Remove group</button>
+            <button id="btn-members-add">Add selected users to group</button>
+            <button id="btn-members-remove">Remove selected members from group</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <dialog id="dlg-add-users">
+      <form method="dialog" id="add-users-form">
+        <h2>Add users</h2>
+        <div class="scroll grid-scroll">
+          <table class="entry-grid">
+            <thead><tr><th>Username</th><th>Given name</th><th>Surname</th><th>Password</th><th>Change at login</th></tr></thead>
+            <tbody id="add-users-rows"></tbody>
+          </table>
+        </div>
+        <div class="buttons inline">
+          <button type="button" id="btn-add-row">Add row</button>
+          <span class="spacer"></span>
+          <button value="cancel" formnovalidate>Cancel</button>
+          <button value="ok" class="primary">Add users</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dlg-password">
+      <form method="dialog">
+        <h2>Change password</h2>
+        <p id="pw-user" class="muted"></p>
+        <label>New password<input id="pw-new" type="password" autocomplete="new-password" /></label>
+        <label>Confirm password<input id="pw-confirm" type="password" autocomplete="new-password" /></label>
+        <label class="check"><input id="pw-must-change" type="checkbox" /> Must change at next login</label>
+        <div class="buttons inline"><span class="spacer"></span><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary">Change password</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="dlg-prompt">
+      <form method="dialog">
+        <h2 id="prompt-title"></h2>
+        <label><span id="prompt-label"></span><input id="prompt-input" /></label>
+        <div class="buttons inline"><span class="spacer"></span><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary">OK</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="dlg-message">
+      <form method="dialog">
+        <h2 id="message-title"></h2>
+        <pre id="message-body"></pre>
+        <div class="buttons inline"><span class="spacer"></span><button value="cancel" id="message-cancel">Cancel</button><button value="ok" class="primary" id="message-ok">OK</button></div>
+      </form>
+    </dialog>
+
+    <div id="busy" hidden><div class="spinner"></div><span>Sending SSH commands…</span></div>
+    <script src="renderer.js"></script>
+  </body>
+</html>
