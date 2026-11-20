@@ -41,10 +41,6 @@
       "target": "AppImage",
       "category": "Network",
       "icon": "design/SDCC.iconset/icon_512x512@2x.png"
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "draft"
     }
   },
   "dependencies": {

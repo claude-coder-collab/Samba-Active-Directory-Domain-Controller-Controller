@@ -28,7 +28,7 @@ Multi-select users and group members with Ctrl/⌘-click (Shift-click for a rang
 ```sh
 npm run dist        # dmg / nsis installer / AppImage for the current OS, in release/
 ```
-Pushing a `v*` tag builds all three on GitHub Actions and attaches them to a draft release.
+Pushing a `v*` tag builds all three on GitHub Actions (the macOS dmg is universal: Intel and Apple Silicon) and attaches them to a draft release. The app is unsigned: on macOS, right-click it and choose **Open** the first time.
 
 ### Development
 ```sh
