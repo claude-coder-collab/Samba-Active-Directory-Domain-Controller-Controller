@@ -50,6 +50,10 @@ thead th { position: sticky; top: 0; background: var(--card); border-bottom: 1px
 #users-table tbody tr { cursor: default; user-select: none; }
 #users-table tbody tr.selected, .tree .selected > .label { background: var(--select); }
 #users-table td.flags { color: var(--muted); font-size: 11px; white-space: normal; }
+.expiry.warn { color: #b45309; font-weight: 600; }
+.expiry.expired { color: var(--danger); font-weight: 600; }
+.expiry.none { color: var(--muted); }
+@media (prefers-color-scheme: dark) { .expiry.warn { color: #fbbf24; } }
 .disabled-user td:first-child { text-decoration: line-through; color: var(--muted); }
 .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .buttons.inline { display: flex; align-items: center; margin-top: 10px; }

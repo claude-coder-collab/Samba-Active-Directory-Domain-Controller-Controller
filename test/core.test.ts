@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { normalisePreferences } from '../src/core/api.js';
+import { describeExpiry, parsePasswordExpiry } from '../src/core/expiry.js';
 import { parseAccountFlags } from '../src/core/flags.js';
 import { emptyUserRow, policyChanges, rowsToUsers } from '../src/core/forms.js';
 import { domainToDn, parseDn, parseKeyValueLines, parseLdif, parsePasswordPolicy, summariseSambaError, userFromLdif } from '../src/core/parse.js';
@@ -109,6 +110,7 @@ describe('parsers', () => {
       flags: ['ACCOUNTDISABLE', 'NORMAL_ACCOUNT'],
       disabled: true,
       distinguishedName: 'CN=Jane Smith,CN=Users,DC=samdom,DC=example,DC=com',
+      passwordExpiry: { kind: 'unknown' },
     });
   });
   it('falls back to UPN and empty names', () => {
@@ -156,5 +158,34 @@ describe('preferences', () => {
       username: 'root',
       knownHosts: { a: 'x' },
     });
+  });
+});
+
+describe('password expiry', () => {
+  const now = Date.UTC(2026, 10, 19, 12, 0, 0);
+  const filetime = (unixMs: number): string => String((BigInt(unixMs) + 11644473600000n) * 10000n);
+
+  it('parses special values', () => {
+    expect(parsePasswordExpiry('9223372036854775807')).toEqual({ kind: 'never' });
+    expect(parsePasswordExpiry('0')).toEqual({ kind: 'mustChange' });
+    expect(parsePasswordExpiry(undefined)).toEqual({ kind: 'unknown' });
+    expect(parsePasswordExpiry('garbage')).toEqual({ kind: 'unknown' });
+  });
+
+  it('converts FILETIME to unix time', () => {
+    expect(parsePasswordExpiry('116444736000000000')).toEqual({ kind: 'at', unixMs: 0 });
+    expect(parsePasswordExpiry(filetime(now))).toEqual({ kind: 'at', unixMs: now });
+  });
+
+  it('describes expiry', () => {
+    const at = (days: number) => ({ kind: 'at' as const, unixMs: now + days * 86400000 });
+    expect(describeExpiry(at(30.5), now)).toEqual({ text: '30 days', level: 'ok' });
+    expect(describeExpiry(at(14), now)).toEqual({ text: '14 days', level: 'warn' });
+    expect(describeExpiry(at(1.2), now)).toEqual({ text: '1 day', level: 'warn' });
+    expect(describeExpiry(at(0.5), now)).toEqual({ text: 'Today', level: 'warn' });
+    expect(describeExpiry(at(-2), now)).toEqual({ text: 'Expired', level: 'expired' });
+    expect(describeExpiry({ kind: 'never' }, now).text).toBe('Never');
+    expect(describeExpiry({ kind: 'mustChange' }, now).text).toBe('Must change');
+    expect(describeExpiry({ kind: 'unknown' }, now).text).toBe('—');
   });
 });

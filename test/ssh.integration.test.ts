@@ -30,8 +30,13 @@ describe('SshExecutor against the fake DC', () => {
     try {
       expect(seen).toEqual([expectedFingerprint()]);
       const s = new SambaTool(ex);
-      expect((await s.getUsers()).map((u) => u.username)).toEqual(['Administrator', 'agarcía', 'Guest', 'jsmith', 'mjones']);
+      expect((await s.getUsers()).map((u) => u.username)).toEqual(['Administrator', 'agarcía', 'Guest', 'jsmith', 'mjones', 'pchen', 'rnew']);
       expect((await s.getUsers()).find((u) => u.username === 'agarcía')?.surname).toBe('García');
+      const users = Object.fromEntries((await s.getUsers()).map((u) => [u.username, u.passwordExpiry]));
+      expect(users['Administrator']).toEqual({ kind: 'never' });
+      expect(users['rnew']).toEqual({ kind: 'mustChange' });
+      const jsmith = users['jsmith'];
+      expect(jsmith?.kind === 'at' && Math.round((jsmith.unixMs - Date.now()) / 86400000)).toBe(32);
       await s.addUser({ username: 'qa1', password: `it's "quoted" $(x)`, givenName: 'Q A', surname: "O'Neil", mustChangeAtNextLogin: false });
       expect(dc.tool.users.get('qa1')).toMatchObject({ password: `it's "quoted" $(x)`, givenName: 'Q A', surname: "O'Neil" });
       await s.addGroupMembers('Sales Team', ['qa1', 'jsmith']);

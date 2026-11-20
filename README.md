@@ -6,7 +6,7 @@ TypeScript/Electron port of [AdamVenn/Samba-Active-Directory-Domain-Controller-C
 
 ### What it does
 - View and edit the domain password policy
-- View, add, delete, enable and disable users
+- View, add, delete, enable and disable users, with days left until each password expires
 - Reset user passwords (optionally forcing a change at next login)
 - View, add and remove non-built-in groups
 - Add users to and remove users from groups
